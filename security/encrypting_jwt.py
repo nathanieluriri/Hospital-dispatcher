@@ -56,7 +56,7 @@ def create_jwt_token(token:AccessTokenProper):
             'token_id':token.id,
             'user_id': token.user_id,
             'role':token.role,
-            'exp': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=20)
+            'exp': datetime.datetime.now(timezone.utc) + datetime.timedelta(hours=2)
         }
     
     

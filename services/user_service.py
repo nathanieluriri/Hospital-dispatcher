@@ -1,9 +1,14 @@
 from repositories.user_repo import create_user,find_user_by_email,update_password,update_user_details,find_user_by_id,delete_user_by_id
 from repositories.token_repo import create_access_tokens,create_refresh_tokens
-from schemas.user_schema import UserBase,UserType,RegisteredUser,UpdateUser
+from schemas.user_schema import UserBase,RegisteredUser,UpdateUser
 from schemas.token_schema import AccessTokenBase,RefreshTokenBase,TokenOut
 from security.hash import check_password
 import sqlite3
+from core.database import db
+from schemas.password_reset_schema import PasswordResetTokenCreate,PasswordResetBase
+import random
+from services.email_service import send_change_of_password_otp_email
+
 from fastapi import HTTPException,status
 def sign_up_service(user_data:UserBase)->TokenOut:
     try:
@@ -59,4 +64,23 @@ def change_password_service(user_id:int,password:str):
 def delete_service(user_id):
     delete_count = delete_user_by_id(user_id=user_id)
     return delete_count
+
+
+
+def generate_random_six_integers_as_string(min_val=0, max_val=9, separator=""):
+
+  if min_val > max_val:
+    raise ValueError("min_val cannot be greater than max_val")
+
+  random_integers = [random.randint(min_val, max_val) for _ in range(6)]
+
+  # Convert each integer to a string and join them with the specified separator
+  return separator.join(map(str, random_integers))
+
+def create_password_reset_token(user_data:PasswordResetBase):
+    OTP=generate_random_six_integers_as_string()
+    user_details = db.users.find_one(filter_dict={"emai":user_data.email})
+    password_reset_token = PasswordResetTokenCreate(user_id=user_details['id'],token=OTP)
+    db.password_reset_token.insert_one(data=password_reset_token.model_dump())
+    send_change_of_password_otp_email(receiver_email=user_data.email,otp=OTP)
 

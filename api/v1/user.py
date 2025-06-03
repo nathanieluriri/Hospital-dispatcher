@@ -4,9 +4,11 @@ from core.database import database_name
 from services.user_service import sign_up_service,login_service
 from schemas.user_schema import UserBase,RegisteredUser,UserOut
 from schemas.token_schema import TokenOut,ResfreshingToken
+from schemas.password_reset_schema import VerifyPasswordResetBase,PasswordResetBase,PasswordReset
 from schemas.success_response_schema import APISuccessResponse
 from security.auth import verify_token
 from security.tokens import refresh_access_token
+from repositories.password_reset_repo import create_password_reset_token,set_new_password
 router = APIRouter()
 
 @router.post("/sign-up", response_description="Successfully created user account.User Id, Access and refresh tokens returned for authentication.",response_model=APISuccessResponse[TokenOut])
@@ -53,3 +55,30 @@ def protected_route(refresh_token:ResfreshingToken,token = Depends(verify_token)
         message="User Access Tokens Refreshed Successfully",
         data= new_token
     )
+    
+    
+
+@router.post("/password/reset-token",response_description="Successfully sent OTP to user Email",response_model=APISuccessResponse[str])
+def initiate_change_of_user_password_process(email:PasswordResetBase):
+    
+    create_password_reset_token(user_data=email)
+    return APISuccessResponse[str](
+        success=True,
+        message="Successfully sent OTP",
+        data=""
+    )
+    
+    
+
+@router.post("/reset/password",response_description="Successfully Reset Password For This Email",response_model=APISuccessResponse[str])
+def conclude_change_of_user_password_process(email:VerifyPasswordResetBase):
+    reset = PasswordReset(email=email.email,token=email.token,password=email.password)
+    set_new_password(password=reset)
+    
+    return APISuccessResponse[str](
+        success=True,
+        message="Successfully Reset Password",
+        data=""
+    )
+    
+    

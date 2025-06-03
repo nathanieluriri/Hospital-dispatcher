@@ -5,6 +5,10 @@ from schemas.token_schema import AccessTokenBase,RefreshTokenBase,TokenOut
 from security.hash import check_password
 import sqlite3
 from fastapi import HTTPException,status
+from core.database import db
+from schemas.password_reset_schema import PasswordResetTokenCreate,PasswordResetBase
+import random
+from services.email_service import send_change_of_password_otp_email
 
 
 def sign_up_service(user_data:AdminBase):
@@ -47,3 +51,42 @@ def login_service(user_data:RegisteredAdmin):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Email or Password")
     
     
+
+    
+# def update_service(user_id:int,user_data:UpdateUser):
+#     user_details = find_user_by_id(user_id=user_id)
+#     update_count= update_user_details(user_id=user_details['id'],update_data=user_data)
+#     return update_count
+
+
+# def change_password_service(user_id:int,password:str):
+#     user_details = find_user_by_id(user_id=user_id)
+#     update_count= update_password(user_id=user_details['id'],password=password)
+#     return update_count
+
+# def delete_service(user_id):
+#     delete_count = delete_user_by_id(user_id=user_id)
+#     return delete_count
+
+
+
+
+
+
+def generate_random_six_integers_as_string(min_val=0, max_val=9, separator=""):
+
+  if min_val > max_val:
+    raise ValueError("min_val cannot be greater than max_val")
+
+  random_integers = [random.randint(min_val, max_val) for _ in range(6)]
+
+  # Convert each integer to a string and join them with the specified separator
+  return separator.join(map(str, random_integers))
+
+def create_password_reset_token(user_data:PasswordResetBase):
+    OTP=generate_random_six_integers_as_string()
+    user_details = db.users.find_one(filter_dict={"emai":user_data.email})
+    password_reset_token = PasswordResetTokenCreate(user_id=user_details['id'],token=OTP)
+    db.password_reset_token.insert_one(data=password_reset_token.model_dump())
+    send_change_of_password_otp_email(receiver_email=user_data.email,otp=OTP)
+

@@ -15,9 +15,10 @@ class DBFunctions:
         keys = ", ".join(data.keys())
         placeholders = ", ".join("?" for _ in data)
         values = tuple(data.values())
-
-        query = f"INSERT INTO {table_name} ({keys}) VALUES ({placeholders})"
-
+        if table_name=="password_reset_token":
+            query = f"INSERT OR REPLACE INTO {table_name} ({keys}) VALUES ({placeholders})"
+        else:
+            query = f"INSERT INTO {table_name} ({keys}) VALUES ({placeholders})"
         with sqlite3.connect(database_name) as conn:
             cursor = conn.cursor()
             cursor.execute(query, values)
@@ -47,14 +48,27 @@ class DBFunctions:
             return cursor.rowcount
         
     @staticmethod
-    def __delete(table_name: str, filter_dict: dict,):
+    def __delete(table_name: str, filter_dict: dict, limit: int = None):
         if not table_name.isidentifier():
             raise ValueError("Invalid table name")
 
         where_clause = " AND ".join([f"{k} = ?" for k in filter_dict])
         values = list(filter_dict.values())
 
-        query = f"DELETE FROM {table_name} WHERE {where_clause}"
+        if limit is not None:
+            # Use a subquery to delete a limited number of rows
+            query = f"""
+                DELETE FROM {table_name}
+                WHERE rowid IN (
+                    SELECT rowid FROM {table_name}
+                    WHERE {where_clause}
+                    LIMIT ?
+                )
+            """
+            values.append(limit)
+        else:
+            # No limit: delete all matching rows
+            query = f"DELETE FROM {table_name} WHERE {where_clause}"
 
         with sqlite3.connect(database_name) as conn:
             cursor = conn.cursor()
@@ -99,7 +113,18 @@ class DBFunctions:
         Returns:
             int: number of rows affected
         """
-        rows = self.__delete(table_name=self.table_name,filter_dict=filter_dict)
+        rows = self.__delete(table_name=self.table_name,filter_dict=filter_dict,limit=1)
+        return rows
+    def delete_many(self,filter_dict:dict,limit:int=None)->int:
+        """deletes by finding what should be deleted 
+
+        Args:
+            filter_dict (dict): any key value pair in the database
+
+        Returns:
+            int: number of rows affected
+        """
+        rows = self.__delete(table_name=self.table_name,filter_dict=filter_dict,limit=limit)
         return rows
     
 
