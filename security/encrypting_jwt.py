@@ -2,7 +2,7 @@ import jwt
 import datetime
 from datetime import timezone
 from core.database import db
-from schemas.token_schema import AccessTokenCreate
+from schemas.token_schema import AccessTokenProper
 from functools import lru_cache
 
 @lru_cache()
@@ -32,11 +32,11 @@ def get_secret_and_header():
 
 
 
-def create_jwt_token(token:AccessTokenCreate):
+def create_jwt_token(token:AccessTokenProper):
     """function generates a JWT (JSON Web Token) for a member, using dynamic secret keys and a key ID (kid) for key rotation support.
 
     Args:
-        token (AccessTokenCreate): AccessTokenCreate Object
+        token (AccessTokenProper): AccessTokenProper Object
 
     Returns:
         token: Returns the signed JWT token
@@ -44,13 +44,20 @@ def create_jwt_token(token:AccessTokenCreate):
     secrets = get_secret_and_header()
     SECRET_KEYS= secrets['SECRET_KEY']
     headers= secrets['HEADERS']
-    
-    payload = {
-        'user_id': token.user_id,
-        'role':token.role,
-      
-        'exp': datetime.datetime.now(timezone.utc) + datetime.timedelta(minutes=20)
-    }
+    if token.role=="refresh_token":
+        payload = {
+            'token_id':token.id,
+            'user_id': token.user_id,
+            'role':token.role,
+            'exp': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=20)
+        }
+    else:
+        payload = {
+            'token_id':token.id,
+            'user_id': token.user_id,
+            'role':token.role,
+            'exp': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=20)
+        }
     
     
     token = jwt.encode(payload, SECRET_KEYS[headers['kid']], algorithm='HS256', headers=headers)
@@ -58,7 +65,7 @@ def create_jwt_token(token:AccessTokenCreate):
     return token
 
 
-async def decode_jwt_token(token):
+def decode_jwt_token(token):
     
     """function verifies and decodes a JWT (JSON Web Token) using a dynamic secret identified by the token’s kid (key ID) in the header. It supports secret rotation and handles common token errors.
 
@@ -69,7 +76,7 @@ async def decode_jwt_token(token):
         Exception: expired token or invalid signature
 
     Returns:
-        if decoded true: {'accessToken': '682c99f395ff4782fbea010f', 'role': 'admin',created_at: , 'exp': 1747825460}
+        if decoded true: {'user_id': '682c99f395ff4782fbea010f', 'role': 'admin', 'exp': 1747825460}
     """
     SECRET_KEYS =  get_secret_dict()
     # Decode header to extract the `kid`
@@ -92,8 +99,7 @@ async def decode_jwt_token(token):
     except jwt.exceptions.InvalidSignatureError:
         print("invalid signature")
         return None
-
-async def decode_jwt_token_without_expiration(token):
+def decode_jwt_token_without_expiration(token):
     """This async function decodes and verifies a JWT, but with one key difference:
 👉 If the token is expired, it still decodes the payload by explicitly skipping the expiration check.
 

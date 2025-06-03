@@ -4,15 +4,21 @@ from typing import Union
 from enum import Enum
 
 
-class user_type(str, Enum):
+class UserType(str, Enum):
     Dispatcher = "Dispatcher"
     Hospital_Staff = "Hospital_Staff"
     
  
 class AdminBase(BaseModel):
-    user_type:user_type
+    user_type:UserType
     email: EmailStr
     hashed_password:  str 
+
+    
+    
+class RegisteredAdmin(BaseModel):
+    email: EmailStr
+    password:  str 
 
     
         

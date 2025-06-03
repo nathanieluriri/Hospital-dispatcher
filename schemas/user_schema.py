@@ -4,7 +4,7 @@ from typing import Union
 from enum import Enum
 
 
-class user_type(str, Enum):
+class UserType(str, Enum):
     Patients = "Patients"
     Emergency_Contacts = "Emergency_Contacts"
     
@@ -12,10 +12,11 @@ class user_type(str, Enum):
 
 
 class UserBase(BaseModel):
-    username:str
-    user_type:user_type
+    first_name:str
+    last_name:str
+    user_type:UserType
     email: EmailStr
-    hashed_password:  str 
+    hashed_password: str 
 
     
         
@@ -28,7 +29,21 @@ class NewUserCreate(UserBase):
 
 class UserOut(BaseModel):
     id:int
-    username:str
+    first_name:str
+    last_name:str
     user_type:str
     email:EmailStr
     
+    
+
+class RegisteredUser(BaseModel):
+    email: EmailStr
+    password:  str 
+
+    
+    
+class UpdateUser(BaseModel):
+    email: EmailStr
+    first_name:Optional[str]=None
+    last_name:Optional[str]=None
+    user_type:Optional[UserType]=None   
