@@ -5,30 +5,26 @@ from enum import Enum
 
 
 class user_type(str, Enum):
-    Patients = "Patients"
-    Emergency_Contacts = "Emergency_Contacts"
+    Dispatcher = "Dispatcher"
+    Hospital_Staff = "Hospital_Staff"
     
-    
-
-
-class UserBase(BaseModel):
-    username:str
+ 
+class AdminBase(BaseModel):
     user_type:user_type
     email: EmailStr
     hashed_password:  str 
 
     
         
-class NewUserCreate(UserBase):
+class NewAdminCreate(AdminBase):
     hashed_password: Union[str ,bytes]
     @model_validator(mode='after')
     def obscure_password(self):
         self.hashed_password=hash_password(self.hashed_password)
         return self
 
-class UserOut(BaseModel):
+class AdminOut(BaseModel):
     id:int
-    username:str
     user_type:str
     email:EmailStr
     

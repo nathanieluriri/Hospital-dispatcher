@@ -1,3 +1,5 @@
 fastapi
 requests
 bcrypt
+pybloom_live
+pyjwt
