@@ -5,3 +5,5 @@ pybloom_live
 pyjwt
 jwt
 APScheduler
+uvicorn
+pydantic[email]

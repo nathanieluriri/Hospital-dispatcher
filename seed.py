@@ -1,6 +1,6 @@
 import sqlite3
 
-def seed_database(db_path="database.db"):
+def seed_database(db_path="db.db"):
     schema = """
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

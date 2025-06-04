@@ -59,7 +59,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 def start_scheduler():
-    db.ambulances.update_all_rows(key="ambulance_status",value="Available")
+    try:
+        db.ambulances.update_all_rows(key="ambulance_status",value="Available")
+    except: 
+        pass
     scheduler.add_job(
         forever_retry_job,
         'interval',
@@ -70,7 +73,10 @@ def start_scheduler():
 
 @app.on_event("shutdown")
 def make_all_ambulances_offline():
-    db.ambulances.update_all_rows(key="ambulance_status",value="Offline")
+    try:
+        db.ambulances.update_all_rows(key="ambulance_status",value="Offline")
+    except:
+        pass
 
 app.include_router(user.router, prefix="/api/v1/user", tags=["User"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
