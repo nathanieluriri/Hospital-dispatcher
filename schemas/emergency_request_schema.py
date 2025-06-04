@@ -67,7 +67,6 @@ class AssignedEmergencyRequestModel(SubmitEmergencyRequestModel):
     
 class ResponedEmergencyRequestModel(AssignedEmergencyRequestModel):
     response_duration: int
-    travel_time: int
     arrival_time: int
     
     

@@ -102,6 +102,14 @@ class DBFunctions:
         value = self.__update(filter_dict=filter_dict,table_name=self.table_name,data=data)
         return value
     
+    def update_all_rows(self, key: str, value):
+        with sqlite3.connect(database_name) as conn:
+            cursor = conn.cursor()
+            query = f"UPDATE {self.table_name} SET {key} = ?"
+            cursor.execute(query, (value,))
+            conn.commit()
+            print(f"Updated '{key}' to '{value}' in all rows of '{self.table_name}'.")
+        
 
     
     def delete_one(self,filter_dict:dict)->int:

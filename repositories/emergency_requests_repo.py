@@ -1,5 +1,7 @@
 from core.database import db
-from schemas.emergency_request_schema import SubmitEmergencyRequestModel,UnfinishedEmergencyRequestOut,AssignedEmergencyRequestModel
+from schemas.emergency_request_schema import SubmitEmergencyRequestModel,UnfinishedEmergencyRequestOut,AssignedEmergencyRequestModel,ResponedEmergencyRequestModel
+
+
 
 def add_emergency_request_func(request_data:SubmitEmergencyRequestModel):
     data = request_data.model_dump()
@@ -29,3 +31,9 @@ def find_list_of_unfinished_emergency_request(skip,limit):
     if requests:
         return [UnfinishedEmergencyRequestOut(**request) for request in requests]
     else: return []
+    
+    
+def final_status_update_emergency_request_func(arrival_time:int,id:int,request_time):
+    response_duration = arrival_time-request_time
+    return db.emergency_request.update_one(filter_dict={"id":id},data={"arrival_time":arrival_time,"response_duration":response_duration})
+     

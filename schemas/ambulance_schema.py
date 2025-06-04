@@ -32,7 +32,7 @@ class NewAmbulanceCreate(AmbulanceBase):
 
 class AmbulanceOut(AmbulanceBase):
     id:int
-
+    last_assigned_time:Optional[str]=None
 
 class UpdateAmbulanceBase(BaseModel):
     longitude:Optional[float]=None

@@ -1,30 +1,40 @@
 from fastapi import FastAPI,Depends,Request,status
 from security.auth import verify_token
 from api.v1 import user,admin,ambulance,hospital,emergency_requests
-from core.database import database_name
+from schemas.ambulance_schema import AmbulanceStatus
+from repositories.ambulance_repo import find_all_ambulances
+from services.ambulance_service import set_ambulance_to_available
+from core.database import db
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
+from utils import is_30_minutes_apart
 scheduler = BackgroundScheduler()
 scheduler.start()
 import asyncio
 
-# The long-running job (runs forever in interval)
+
 def forever_retry_job():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     try:
+        Ambulances = find_all_ambulances()
         
-
-      print("Nathaniel")
+        for Ambulance in Ambulances:
+            if Ambulance.ambulance_status==AmbulanceStatus.Busy:
+                print("ni")
+                if is_30_minutes_apart(Ambulance.last_assigned_time):
+                    emergency_request = db.emergency_request.find_one(filter_dict={"assigned_ambulance_id":Ambulance.id})
+                    if emergency_request:
+                        set_ambulance_to_available(Ambulance,emergency_request_id=emergency_request['id'],emergency_request_time=emergency_request['request_time'])
+                else:
+                    pass  
 
     except Exception as e:
         print(f"Error in background task: {e}")
     finally:
         loop.close()
 
-
-# Schedule the job to run every few seconds (forever)
 
 app = FastAPI( responses= {
         status.HTTP_401_UNAUTHORIZED: {
@@ -49,6 +59,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def start_scheduler():
+    db.ambulances.update_all_rows(key="ambulance_status",value="Available")
     scheduler.add_job(
         forever_retry_job,
         'interval',
@@ -57,6 +68,9 @@ def start_scheduler():
         replace_existing=True
     )
 
+@app.on_event("shutdown")
+def make_all_ambulances_offline():
+    db.ambulances.update_all_rows(key="ambulance_status",value="Offline")
 
 app.include_router(user.router, prefix="/api/v1/user", tags=["User"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
