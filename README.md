@@ -1,4 +1,4 @@
-Here’s a cleaner, more professional, and to-the-point version of your `README.md` section for the Dockerized **Hospital Dispatcher System Backend**:
+Dispatcher System Backend**:
 
 ---
 
