@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Depends,Request
+from fastapi import FastAPI,Depends,Request,status
 from security.auth import verify_token
 from api.v1 import user,admin
 from core.database import database_name
@@ -38,7 +38,23 @@ async def lifespan(app: FastAPI):
 
 
 
-app = FastAPI(lifespan=lifespan,itle="Hospital FastAPI Backend",summary="""API Documentation for the "Hospital Dispatcher system", providing RESTful endpoints to manage users, admins, Ambulances updates (location, status), hospitals, and Emergency requests. Features JWT-based authentication including token refresh capabilities.""")
+app = FastAPI(lifespan=lifespan, responses= {
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Missing or invalid token.",
+            "content": {"application/json": {"example": {"detail": "Not authenticated"}}}
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - User does not have admin privileges.",
+            "content": {"application/json": {"example": {"detail": "Not authorized to perform this action"}}}
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict - Ambulance with this license plate already exists.",
+            "content": {"application/json": {"example": {"detail": "Ambulance with license plate 'XYZ-789' already exists."}}}
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Validation Error - Invalid input data.",
+            "content": {"application/json": {"example": {"detail": [{"loc": ["body", "license_plate"], "msg": "field required"}]}}}
+        }},title="Hospital FastAPI Backend",summary="""API Documentation for the "Hospital Dispatcher system", providing RESTful endpoints to manage users, admins, Ambulances updates (location, status), hospitals, and Emergency requests. Features JWT-based authentication including token refresh capabilities.""",description="This API documentation outlines the comprehensive set of RESTful endpoints for the Hospital Dispatcher System. It details operations for managing various core components: users, administrators, ambulance updates (including real-time location and status), hospitals, and emergency requests. The system features robust JWT-based authentication, ensuring secure access to all resources, and includes token refresh capabilities for continuous, uninterrupted authorization")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins
@@ -47,6 +63,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
     
+
     
 
 

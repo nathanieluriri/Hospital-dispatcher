@@ -16,7 +16,7 @@ class UserBase(BaseModel):
     last_name:str
     user_type:UserType
     email: EmailStr
-    hashed_password: str 
+    password: str 
 
     
         
@@ -24,7 +24,7 @@ class NewUserCreate(UserBase):
     hashed_password: Union[str ,bytes]
     @model_validator(mode='after')
     def obscure_password(self):
-        self.hashed_password=hash_password(self.hashed_password)
+        self.hashed_password=hash_password(self.password)
         return self
 
 class UserOut(BaseModel):
@@ -43,7 +43,6 @@ class RegisteredUser(BaseModel):
     
     
 class UpdateUser(BaseModel):
-    email: EmailStr
     first_name:Optional[str]=None
     last_name:Optional[str]=None
     user_type:Optional[UserType]=None   

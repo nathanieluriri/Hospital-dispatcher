@@ -11,10 +11,14 @@ def validate_access_token(access_token:str):
     print( decoded_token )
     if decoded_token['role']=="user":
         user_details = db.users.find_one(filter_dict={"id":decoded_token['user_id']})
-        return user_details
+        still_valid = db.access_token.find_one(filter_dict={'id':decoded_token['token_id']})
+        if still_valid:
+            return user_details
     elif decoded_token['role']=="admin":
         admin_details = db.admins.find_one(filter_dict={"id":decoded_token['user_id']})
-        return admin_details
+        still_valid = db.access_token.find_one(filter_dict={'id':decoded_token['token_id']})
+        if still_valid:
+            return admin_details
 
 
 def refresh_access_token(refresh_token:str,access_token:str):

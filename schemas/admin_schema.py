@@ -34,3 +34,8 @@ class AdminOut(BaseModel):
     user_type:str
     email:EmailStr
     
+    
+    
+class UpdateAdmin(BaseModel):
+    
+    user_type:Optional[UserType]=None   

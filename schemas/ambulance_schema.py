@@ -31,3 +31,11 @@ class NewAmbulanceCreate(AmbulanceBase):
 
 class AmbulanceOut(AmbulanceBase):
     id:int
+
+
+class UpdateAmbulance(BaseModel):
+    longitude:Optional[float]=None
+    latitude:Optional[float]=None
+    associated_hospital:Optional[int]=None
+    ambulance_status:Optional[AmbulanceStatus]=None
+    ambulance_type:Optional[AmbulanceType]=None
