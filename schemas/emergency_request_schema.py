@@ -1,4 +1,6 @@
 from schemas.general_imports import *
+from schemas.ambulance_schema import AmbulanceOut
+from core.database import db
 from enum import Enum
 
 class EmergencyPriority(str, Enum):
@@ -74,17 +76,32 @@ class EmergencyRequestOut(ResponedEmergencyRequestModel):
     id:int
 
 
-
 class UnfinishedEmergencyRequestOut(BaseModel):
-    id:int
-    user_id:int
-    severity:Optional[str]=None
-    longitude:Optional[float]=None
-    latitude:Optional[float]=None
-    request_time:Optional[int]=None
-    response_duration: Optional[int]=None
-    travel_time: Optional[int]=None
-    arrival_time: Optional[int]=None
-    assigned_ambulance_id:Optional[int]=None
-    dispatch_time:Optional[int]=None
-    dispatch_delay:Optional[int]=None
+    id: int
+    user_id: int
+    severity: Optional[str] = None
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
+    request_time: Optional[int] = None
+    response_duration: Optional[int] = None
+    travel_time: Optional[int] = None
+    arrival_time: Optional[int] = None
+    assigned_ambulance_id: Optional[int] = None # Still useful for internal reference
+    dispatch_time: Optional[int] = None
+    dispatch_delay: Optional[int] = None
+    assigned_ambulance_object: Optional[AmbulanceOut] = None # Where the nested object will go
+
+
+    @model_validator(mode='after')
+    def from_db(self, db_emergency_request: dict) -> 'UnfinishedEmergencyRequestOut':
+        assigned_ambulance_data = None
+        if self.assigned_ambulance_id:
+            print(f"Fetching ambulance for ID: {self.assigned_ambulance_id}")
+            ambulance_record =  db.ambulances.find_one(filter_dict={"id":self.assigned_ambulance_id})
+
+            if ambulance_record:
+                assigned_ambulance_data = AmbulanceOut(**ambulance_record)
+                self.assigned_ambulance_object = assigned_ambulance_data
+                
+
+        return self
