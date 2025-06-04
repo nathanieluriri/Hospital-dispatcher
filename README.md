@@ -44,7 +44,8 @@ docker run -p 8000:8000 hospital-dispatcher-backend
 ---
 
 ## 🌐 Access the Application
-
+https://www.postman.com/orbital-module-geoscientist-92143211/workspace/my-workspace/collection/31971164-0ed4f5a5-94fd-4bff-93d4-4e327d798382?action=share&creator=31971164
+* **Postman Public URL**: [https://www.postman.com/orbital-module-geoscientist-92143211/workspace/my-workspace/collection/31971164-0ed4f5a5-94fd-4bff-93d4-4e327d798382?action=share&creator=31971164](https://www.postman.com/orbital-module-geoscientist-92143211/workspace/my-workspace/collection/31971164-0ed4f5a5-94fd-4bff-93d4-4e327d798382?action=share&creator=31971164)
 * **Base URL**: [http://localhost:8000](http://localhost:8000)
 * **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 * **API Docs (ReDoc)**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
