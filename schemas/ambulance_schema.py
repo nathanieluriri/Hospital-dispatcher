@@ -27,15 +27,28 @@ class AmbulanceBase(BaseModel):
     ambulance_status:AmbulanceStatus
     ambulance_type:AmbulanceType
 class NewAmbulanceCreate(AmbulanceBase):
+    created_at:str= datetime.now()
     pass
 
 class AmbulanceOut(AmbulanceBase):
     id:int
 
 
-class UpdateAmbulance(BaseModel):
+class UpdateAmbulanceBase(BaseModel):
     longitude:Optional[float]=None
     latitude:Optional[float]=None
     associated_hospital:Optional[int]=None
     ambulance_status:Optional[AmbulanceStatus]=None
     ambulance_type:Optional[AmbulanceType]=None
+
+
+class UpdateAmbulance(UpdateAmbulanceBase):
+    last_updated:str= f"{datetime.now()}"
+    last_assigned_time:Optional[str]=None
+    
+class ManualAssigningAmbulanceBase(BaseModel):
+    ambulance_status:Optional[AmbulanceStatus]=None
+class ManualAssigningAmbulance(ManualAssigningAmbulanceBase):
+
+    last_updated:str= f"{datetime.now()}"
+    last_assigned_time:Optional[str]=f"{datetime.now()}"

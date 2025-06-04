@@ -1,6 +1,6 @@
 from fastapi import APIRouter,status,Depends
 from fastapi.responses import JSONResponse
-from schemas.ambulance_schema import AmbulanceBase,AmbulanceOut,AmbulanceStatus,AmbulanceType,NewAmbulanceCreate,UpdateAmbulance
+from schemas.ambulance_schema import AmbulanceBase,AmbulanceOut,UpdateAmbulanceBase,UpdateAmbulance,ManualAssigningAmbulance,ManualAssigningAmbulanceBase
 from typing import List
 from services.ambulance_service import add_ambulance_service,update_ambulance_service,list_ambulances_service,find_ambulance_by_id_service,delete_ambulance_service
 from schemas.success_response_schema import APISuccessResponse
@@ -13,32 +13,19 @@ router = APIRouter()
     summary="Add a new ambulance",
     description="""
     Adds a new ambulance to the system. Requires administrator privileges.
-    The `license_plate` must be unique.
+ 
     """,
     response_description="Successfully added the new ambulance.",
     response_model=APISuccessResponse[AmbulanceOut],
     dependencies=[Depends(verify_admin_token)], # Only admins can add ambulances
     status_code=status.HTTP_201_CREATED,
-    responses={
-        status.HTTP_201_CREATED: {
-            "description": "Ambulance successfully created.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "Ambulance added successfully.",
-                        "data": AmbulanceOut.Config.json_schema_extra["example"]
-                    }
-                }
-            }
-        },
-    }
+   
 )
 def add_an_Ambulance(ambulance: AmbulanceBase):
     """
     Adds a new ambulance record to the database.
     """
-    new_ambulance = add_ambulance_service(ambulance_data=ambulance)
+    new_ambulance = add_ambulance_service(new=ambulance)
     return APISuccessResponse[AmbulanceOut](
         success=True,
         message="Ambulance added successfully.",
@@ -55,42 +42,15 @@ def add_an_Ambulance(ambulance: AmbulanceBase):
     response_description="Successfully updated the ambulance details.",
     response_model=APISuccessResponse[AmbulanceOut],
     dependencies=[Depends(verify_admin_token)], # Only admins can update ambulances
-    responses={
-        status.HTTP_200_OK: {
-            "description": "Ambulance details successfully updated.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "Ambulance details updated successfully.",
-                        "data": AmbulanceOut.Config.json_schema_extra["example"]
-                    }
-                }
-            }
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "Unauthorized - Missing or invalid token.",
-            "content": {"application/json": {"example": {"detail": "Not authenticated"}}}
-        },
-        status.HTTP_403_FORBIDDEN: {
-            "description": "Forbidden - User does not have admin privileges.",
-            "content": {"application/json": {"example": {"detail": "Not authorized to perform this action"}}}
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "Not Found - Ambulance with the specified ID does not exist.",
-            "content": {"application/json": {"example": {"detail": "Ambulance not found."}}}
-        },
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "description": "Validation Error - Invalid input data.",
-            "content": {"application/json": {"example": {"detail": [{"loc": ["body", "capacity"], "msg": "value is not a valid integer"}]}}}
-        }
-    }
+   
 )
-def update_ambulance_details(ambulance_id: int, details: UpdateAmbulance):
+def update_ambulance_details(ambulance_id: int, details: UpdateAmbulanceBase):
     """
     Updates an existing ambulance record identified by `ambulance_id`.
     """
-    updated_ambulance = update_ambulance_service(ambulance_id=ambulance_id, ambulance_data=details)
+    details_dict = details.model_dump()
+    data =UpdateAmbulance(**details_dict)
+    updated_ambulance = update_ambulance_service(ambulance_id=ambulance_id, update=data)
     return APISuccessResponse[AmbulanceOut](
         success=True,
         message="Ambulance details updated successfully.",
@@ -111,32 +71,8 @@ def update_ambulance_details(ambulance_id: int, details: UpdateAmbulance):
     dependencies=[Depends(verify_admin_token)], # Only admins can delete ambulances
     status_code=status.HTTP_200_OK, # Use 200 OK for response body, or 204 No Content
     responses={
-        status.HTTP_200_OK: { # If returning a message
-            "description": "Ambulance successfully deleted.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "Ambulance deleted successfully.",
-                        "data": "done"
-                    }
-                }
-            }
-        },
-        status.HTTP_204_NO_CONTENT: { # Alternative if you just want to signal success with no body
+               status.HTTP_204_NO_CONTENT: { # Alternative if you just want to signal success with no body
             "description": "Ambulance successfully deleted (no content returned)."
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "Unauthorized - Missing or invalid token.",
-            "content": {"application/json": {"example": {"detail": "Not authenticated"}}}
-        },
-        status.HTTP_403_FORBIDDEN: {
-            "description": "Forbidden - User does not have admin privileges.",
-            "content": {"application/json": {"example": {"detail": "Not authorized to perform this action"}}}
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "Not Found - Ambulance with the specified ID does not exist.",
-            "content": {"application/json": {"example": {"detail": "Ambulance not found."}}}
         }
     }
 )
@@ -152,7 +88,7 @@ def delete_ambulance(ambulance_id: int):
             data="done"
         )
     else:
-        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT,content="")
 
 @router.get(
     "/details",
@@ -164,37 +100,11 @@ def delete_ambulance(ambulance_id: int):
     response_description="Successfully retrieved the list of ambulances.",
     response_model=APISuccessResponse[List[AmbulanceOut]],
     responses={
-        status.HTTP_200_OK: {
-            "description": "List of ambulances successfully retrieved.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "Ambulances retrieved successfully.",
-                        "data": [
-                            AmbulanceOut.Config.json_schema_extra["example"],
-                            {
-                                "id": 2,
-                                "license_plate": "DEF-456",
-                                "model": "Ford Ambulance",
-                                "capacity": 3,
-                                "status": "on_scene",
-                                "current_latitude": 6.4567,
-                                "current_longitude": 3.4567
-                            }
-                        ]
-                    }
-                }
-            }
-        },
-        status.HTTP_204_NO_CONTENT: { # Alternative if you just want to signal success with no body
-            "description": "No Ambulances (no content returned)."
-        },
-        status.HTTP_401_UNAUTHORIZED: { # If this endpoint is also protected
-            "description": "Unauthorized - Missing or invalid token.",
-            "content": {"application/json": {"example": {"detail": "Not authenticated"}}}
-        },
+               status.HTTP_204_NO_CONTENT: { # Alternative if you just want to signal success with no body
+            "description": "Ambulance successfully Retrieved But there are no current ambulances in the database (no content returned)."
+        }
     }
+   
 )
 def list_all_ambulances(skip: int = 0, limit: int = 10):
     """
@@ -208,7 +118,7 @@ def list_all_ambulances(skip: int = 0, limit: int = 10):
             data=ambulances
         )
     else:
-        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT,content="")
         
     
     
@@ -223,18 +133,7 @@ def list_all_ambulances(skip: int = 0, limit: int = 10):
     response_description="Successfully retrieved ambulance details.",
     response_model=APISuccessResponse[AmbulanceOut],
     responses={
-        status.HTTP_200_OK: {
-            "description": "Ambulance details successfully retrieved.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "Ambulance retrieved successfully.",
-                        "data": AmbulanceOut.Config.json_schema_extra["example"]
-                    }
-                }
-            }
-        },
+       
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found - Ambulance with the specified ID does not exist.",
             "content": {"application/json": {"example": {"detail": "Ambulance not found."}}}
@@ -250,5 +149,31 @@ def get_ambulance_by_id(ambulance_id: int):
         success=True,
         message="Ambulance retrieved successfully.",
         data=ambulance
+    )
+
+
+
+@router.patch(
+    "/manual-status-update/{ambulance_id}",
+    summary="Manually Update ambulance details",
+    description="""
+    Updates specific details of an existing ambulance identified by its ID.
+    This endpoint supports partial updates (PATCH method). Requires administrator privileges.
+    """,
+    response_description="Successfully updated the ambulance details.",
+    response_model=APISuccessResponse[AmbulanceOut],
+    dependencies=[Depends(verify_admin_token)], # Only admins can update ambulances
+   
+)
+def manual_assigning_ambulance_status(ambulance_id: int, details: ManualAssigningAmbulanceBase):
+    """
+    Updates an existing ambulance record identified by `ambulance_id`.
+    """
+    update_details = ManualAssigningAmbulance(ambulance_status=details.ambulance_status)
+    updated_ambulance = update_ambulance_service(ambulance_id=ambulance_id, update=update_details)
+    return APISuccessResponse[AmbulanceOut](
+        success=True,
+        message="Ambulance details updated successfully.",
+        data=updated_ambulance
     )
 

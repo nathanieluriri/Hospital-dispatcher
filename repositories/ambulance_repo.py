@@ -38,6 +38,6 @@ def update_ambulance_details(ambulance_id:int,update_data:UpdateAmbulance)->Ambu
     db.ambulances.update_one(filter_dict={"id":ambulance_id},data=update_data.model_dump(exclude_none=True))
     return find_ambulance_by_id(ambulance_id)
     
-def delete_admin_by_id(ambulance_id:int):
+def delete_ambulance_by_id(ambulance_id:int):
     return db.ambulances.delete_one({"id":ambulance_id})
     

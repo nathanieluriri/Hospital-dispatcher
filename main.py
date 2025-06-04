@@ -1,6 +1,6 @@
 from fastapi import FastAPI,Depends,Request,status
 from security.auth import verify_token
-from api.v1 import user,admin
+from api.v1 import user,admin,ambulance,hospital
 from core.database import database_name
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -43,14 +43,7 @@ app = FastAPI(lifespan=lifespan, responses= {
             "description": "Unauthorized - Missing or invalid token.",
             "content": {"application/json": {"example": {"detail": "Not authenticated"}}}
         },
-        status.HTTP_403_FORBIDDEN: {
-            "description": "Forbidden - User does not have admin privileges.",
-            "content": {"application/json": {"example": {"detail": "Not authorized to perform this action"}}}
-        },
-        status.HTTP_409_CONFLICT: {
-            "description": "Conflict - Ambulance with this license plate already exists.",
-            "content": {"application/json": {"example": {"detail": "Ambulance with license plate 'XYZ-789' already exists."}}}
-        },
+       
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "description": "Validation Error - Invalid input data.",
             "content": {"application/json": {"example": {"detail": [{"loc": ["body", "license_plate"], "msg": "field required"}]}}}
@@ -70,5 +63,28 @@ app.add_middleware(
 
 app.include_router(user.router, prefix="/api/v1/user", tags=["User"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(ambulance.router, prefix="/api/v1/ambulance", tags=["Ambulance"],responses={
+     status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - User does not have admin privileges.",
+            "content": {"application/json": {"example": {"detail": "Not authorized to perform this action"}}}
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict - Ambulance with this ID already exists.",
+            "content": {"application/json": {"example": {"detail": "Ambulance already exists."}}}
+        },
+})
+
+app.include_router(hospital.router, prefix="/api/v1/hospital", tags=["Hospital"],responses={
+     status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - User does not have admin privileges.",
+            "content": {"application/json": {"example": {"detail": "Not authorized to perform this action"}}}
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict - .",
+            "content": {"application/json": {"example": {"detail": "Hospital already exists."}}}
+        },
+})
+
+
 
 
