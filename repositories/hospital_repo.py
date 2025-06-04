@@ -39,8 +39,8 @@ def find_hospital_by_id(hospital_id:int)->HospitalOut:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Hospital not found")
     
     
-def find_all_hospitals() -> List[HospitalOut]:
-    hospitals = db.hospitals.find()
+def find_all_hospitals(skip:int,limit:int) -> List[HospitalOut]:
+    hospitals = db.hospitals.find(skip=skip,limit=limit)
     if hospitals:
         return [HospitalOut(**hospital) for hospital in hospitals]
     else: return []

@@ -4,3 +4,4 @@ bcrypt
 pybloom_live
 pyjwt
 jwt
+APScheduler

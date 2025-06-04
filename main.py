@@ -1,44 +1,32 @@
 from fastapi import FastAPI,Depends,Request,status
 from security.auth import verify_token
-from api.v1 import user,admin,ambulance,hospital
+from api.v1 import user,admin,ambulance,hospital,emergency_requests
 from core.database import database_name
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
 import asyncio
-import logging
 
-stop_event = asyncio.Event()
+# The long-running job (runs forever in interval)
+def forever_retry_job():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-async def periodic_task():
-    
-    while not stop_event.is_set():
-        try:
+    try:
+        
 
-            await asyncio.sleep(2) 
-        except asyncio.CancelledError:
-       
-            break
-        except Exception as e:
-            pass
-        finally:
-            pass
-            await asyncio.sleep(1)
+      print("Nathaniel")
+
+    except Exception as e:
+        print(f"Error in background task: {e}")
+    finally:
+        loop.close()
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    task = asyncio.create_task(periodic_task())
-    app.state.periodic_task = task # Store the task reference to cancel it later
-    yield
-    stop_event.set()  # Signal the task to stop
-    await app.state.periodic_task 
+# Schedule the job to run every few seconds (forever)
 
-
-
-
-
-
-app = FastAPI(lifespan=lifespan, responses= {
+app = FastAPI( responses= {
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized - Missing or invalid token.",
             "content": {"application/json": {"example": {"detail": "Not authenticated"}}}
@@ -59,6 +47,15 @@ app.add_middleware(
 
     
 
+@app.on_event("startup")
+def start_scheduler():
+    scheduler.add_job(
+        forever_retry_job,
+        'interval',
+        seconds=5,
+        id='forever-assign-checker',
+        replace_existing=True
+    )
 
 
 app.include_router(user.router, prefix="/api/v1/user", tags=["User"])
@@ -88,3 +85,4 @@ app.include_router(hospital.router, prefix="/api/v1/hospital", tags=["Hospital"]
 
 
 
+app.include_router(emergency_requests.router, prefix="/api/v1/emergency-requests", tags=["Emergency Requests"])

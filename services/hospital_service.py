@@ -14,7 +14,7 @@ def update_hospital_service(hospital_id:int,update:UpdateHospital)->HospitalOut:
     return update_hospital_details(hospital_id=hospital_id,update_data=update)
 
 def list_hospitals_service(skip:int,limit:int)->List[HospitalOut]:
-    return find_all_hospitals()
+    return find_all_hospitals(skip=skip,limit=limit)
 
 def find_hospital_by_id_service(hospital_id:int)->HospitalOut:
     return find_hospital_by_id(hospital_id=hospital_id)

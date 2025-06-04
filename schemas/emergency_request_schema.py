@@ -50,24 +50,42 @@ EMERGENCY_PRIORITY_MAP = {
     EmergencySeverity.unknown: EmergencyPriority.low,
 }
  
-class EmergencyRequestBase(BaseModel):
-    user_id:int
-    assigned_ambulance_id:int
+
+    
+class SubmitEmergencyRequestModelBase(BaseModel):
     severity:EmergencySeverity
     longitude:float
     latitude:float
-    
-        
-class NewEmergencyRequestCreate(EmergencyRequestBase):
-    priority:Optional[EmergencyPriority]=EmergencyPriority.low
-    @model_validator(mode='after')
-    def set_priority(self):
-        try:
-            self.priority= EMERGENCY_PRIORITY_MAP[self.severity]
-            return self
-        except:
-            pass
-    
-
-class EmergencyRequestOut(EmergencyRequestBase):
+class SubmitEmergencyRequestModel(SubmitEmergencyRequestModelBase):
+    user_id:int
+    request_time:int
+class AssignedEmergencyRequestModel(SubmitEmergencyRequestModel):
     id:int
+    assigned_ambulance_id:int
+    dispatch_time:int
+    dispatch_delay:int
+    
+class ResponedEmergencyRequestModel(AssignedEmergencyRequestModel):
+    response_duration: int
+    travel_time: int
+    arrival_time: int
+    
+    
+class EmergencyRequestOut(ResponedEmergencyRequestModel):
+    id:int
+
+
+
+class UnfinishedEmergencyRequestOut(BaseModel):
+    id:int
+    user_id:int
+    severity:Optional[str]=None
+    longitude:Optional[float]=None
+    latitude:Optional[float]=None
+    request_time:Optional[int]=None
+    response_duration: Optional[int]=None
+    travel_time: Optional[int]=None
+    arrival_time: Optional[int]=None
+    assigned_ambulance_id:Optional[int]=None
+    dispatch_time:Optional[int]=None
+    dispatch_delay:Optional[int]=None

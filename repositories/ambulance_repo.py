@@ -28,8 +28,8 @@ def find_ambulance_by_id(ambulance_id:int)->AmbulanceOut:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Ambulance not found")
     
     
-def find_all_ambulances() -> List[AmbulanceOut]:
-    ambulances = db.ambulances.find()
+def find_all_ambulances(skip:int=None,limit:int=None) -> List[AmbulanceOut]:
+    ambulances = db.ambulances.find(skip=skip,limit=limit)
     if ambulances:
         return [AmbulanceOut(**ambulance) for ambulance in ambulances]
     else: return []

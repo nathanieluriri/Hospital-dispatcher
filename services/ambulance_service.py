@@ -15,7 +15,7 @@ def update_ambulance_service(ambulance_id:int,update:UpdateAmbulance)->Ambulance
     return update_ambulance_details(ambulance_id=ambulance_id,update_data=update)
 
 def list_ambulances_service(skip:int,limit:int)->List[AmbulanceOut]:
-    return find_all_ambulances()
+    return find_all_ambulances(skip=skip,limit=limit)
 
 def find_ambulance_by_id_service(ambulance_id:int)->AmbulanceOut:
     return find_ambulance_by_id(ambulance_id=ambulance_id)

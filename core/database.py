@@ -128,7 +128,7 @@ class DBFunctions:
         return rows
     
 
-    def find(self)->list:
+    def find(self,filter_dict:dict=None,limit:int=None,skip:int=None)->list:
         """Returns a list to iterate over multiple documents (unlike find_one).
 
         Raises:
@@ -137,18 +137,76 @@ class DBFunctions:
         Returns:
             list: iterate over to view the documents
         """
-        if not self.table_name.isidentifier():
-            raise ValueError("Invalid table name")  # Prevent SQL injection
+        if filter_dict==None and limit==None:
+            if not self.table_name.isidentifier():
+                raise ValueError("Invalid table name")  # Prevent SQL injection
 
-        with sqlite3.connect(database_name) as conn:
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
+            with sqlite3.connect(database_name) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
 
-            query = f"SELECT * FROM {self.table_name}"
-            cursor.execute(query)
-            results = cursor.fetchall()
+                query = f"SELECT * FROM {self.table_name}"
+                cursor.execute(query)
+                results = cursor.fetchall()
 
-            return [dict(row) for row in results]
+                return [dict(row) for row in results]
+        elif filter_dict!=None and limit==None:
+
+            with sqlite3.connect(database_name) as conn:
+                conn.row_factory = sqlite3.Row  # Optional: return dict-like rows
+                cursor = conn.cursor()
+                where_clause = " AND ".join(f"{key} = ?" for key in filter_dict)
+                values = tuple(filter_dict.values())
+                # Use parameterized query with ?
+                query = f"SELECT * FROM {self.table_name} WHERE {where_clause}"
+                cursor.execute(query, values)
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+            
+        elif filter_dict!=None and limit!=None and skip==None:
+
+            with sqlite3.connect(database_name) as conn:
+                conn.row_factory = sqlite3.Row  # Optional: return dict-like rows
+                cursor = conn.cursor()
+                where_clause = " AND ".join(f"{key} = ?" for key in filter_dict)
+                values = tuple(filter_dict.values())
+                # Use parameterized query with ?
+                query = f"SELECT * FROM {self.table_name} WHERE {where_clause} LIMIT {limit}"
+                cursor.execute(query, values)
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        elif filter_dict!=None and limit!=None and skip!=None:
+
+            with sqlite3.connect(database_name) as conn:
+                conn.row_factory = sqlite3.Row  # Optional: return dict-like rows
+                cursor = conn.cursor()
+                where_clause = " AND ".join(f"{key} = ?" for key in filter_dict)
+                values = tuple(filter_dict.values())
+                # Use parameterized query with ?
+                query = f"SELECT * FROM {self.table_name} WHERE {where_clause} LIMIT {limit} OFFSET {skip}"
+                cursor.execute(query, values)
+                results = cursor.fetchall()
+                return [dict(row) for row in results]
+        elif filter_dict==None and limit!=None and skip==None:
+            with sqlite3.connect(database_name) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                query = f"SELECT * FROM {self.table_name} LIMIT {limit}"
+                cursor.execute(query)
+                results = cursor.fetchall()
+
+                return [dict(row) for row in results]
+        elif filter_dict==None and limit!=None and skip!=None:
+            with sqlite3.connect(database_name) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                query = f"SELECT * FROM {self.table_name} LIMIT {limit} OFFSET {skip}"
+                cursor.execute(query)
+                results = cursor.fetchall()
+
+                return [dict(row) for row in results]
         
     def find_one(self,filter_dict:dict)->dict:
         """returns a single document from the filter

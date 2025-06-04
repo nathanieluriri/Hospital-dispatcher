@@ -9,17 +9,19 @@ from fastapi import HTTPException
 def validate_access_token(access_token:str):
     decoded_token =decode_jwt_token(access_token)
     print( decoded_token )
-    if decoded_token['role']=="user":
-        user_details = db.users.find_one(filter_dict={"id":decoded_token['user_id']})
-        still_valid = db.access_token.find_one(filter_dict={'id':decoded_token['token_id']})
-        if still_valid:
-            return user_details
-    elif decoded_token['role']=="admin":
-        admin_details = db.admins.find_one(filter_dict={"id":decoded_token['user_id']})
-        still_valid = db.access_token.find_one(filter_dict={'id':decoded_token['token_id']})
-        if still_valid:
-            return admin_details
-
+    try:
+        if decoded_token['role']=="user":
+            user_details = db.users.find_one(filter_dict={"id":decoded_token['user_id']})
+            still_valid = db.access_token.find_one(filter_dict={'id':decoded_token['token_id']})
+            if still_valid:
+                return user_details
+        elif decoded_token['role']=="admin":
+            admin_details = db.admins.find_one(filter_dict={"id":decoded_token['user_id']})
+            still_valid = db.access_token.find_one(filter_dict={'id':decoded_token['token_id']})
+            if still_valid:
+                return admin_details
+    except:
+        raise HTTPException(status_code=401,detail="(Unauthorized - Missing or invalid token.) Not authenticated")
 
 def refresh_access_token(refresh_token:str,access_token:str):
     decoded_refresh_token = decode_jwt_token(token=refresh_token)
