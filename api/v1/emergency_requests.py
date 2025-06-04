@@ -48,7 +48,7 @@ def add_a_new_Emergency_request(background_tasks:BackgroundTasks,emergency: Subm
 @router.get(
     "/user/submissions",
     response_model_exclude_none=True,
-    summary="Submit a new Emergency Request",
+    summary="Get User Submitted Emergency Request ",
     description="""
     gets Emergency Request from the system. Requires User privileges.
     
